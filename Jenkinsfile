@@ -24,23 +24,29 @@ pipeline {
         }
       }
     }
+    
+    stage('K8s Authenitcation: Kubeconfig'){
+      steps{
+          withKubeConfig([credentialsId: 'kubeconfig']) {
+            sh 'kubectl version --short'
+          }
+      }
+    }
 
-    /* stage('Vulnerability Scan'){
+    stage('Vulnerability Scan - Kubernetes'){
       steps{
         parallel(
-          "Dependency Scan":{
-            sh "mvn dependency-check:check"
-          }, 
-          "Dockerfile Scan":{
-            script {
-              sh "trivy config ."
-              sh "bash trivy-dockerfile-image-scan.sh"
-              sh "trivy fs Dockerfile"
-            }
+          "Kubernetes Cluster Scan":{
+            sh "trivy k8s --report summary cluster"
+            sh "trivy k8s -n kube-system --report summary all"
+          },
+          "Scan YAML Files":{
+            sh "kubesec scan deployment.yaml"
+            sh "bash trivy-image-scan.sh"
           }
-        )      
+        )
       }
-    }   */
+    }
    
     stage ('Update Kubernetes Deployment File'){
       steps{
