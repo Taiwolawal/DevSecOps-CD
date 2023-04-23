@@ -2,7 +2,9 @@ pipeline {
   agent any
 
   environment{
+    DOCKERHUB_USERNAME = "wizhubdocker8s"
     APP_NAME = "java-app-argo"
+    IMAGE_NAME = "${DOCKERHUB_USERNAME}" + "/" + "${APP_NAME}"
   }
 
   stages {
@@ -34,20 +36,15 @@ pipeline {
     }
 
     stage('Vulnerability Scan - Kubernetes'){
-      steps{
-        parallel(
-          "Kubernetes Cluster Scan":{
-            sh "trivy k8s --report summary cluster"
-            sh "trivy k8s -n kube-system --report summary all"
-          },
-          "Scan YAML Files":{
-            sh "kubesec scan deployment.yaml"
-            sh "bash trivy-image-scan.sh"
-          }
-        )
-      }
+        steps{
+            withKubeConfig([credentialsId: 'kubeconfig']){
+                sh "trivy k8s --timeout 10m --report summary cluster"
+                //sh "trivy k8s -n kube-system --report summary all"    
+                //sh "bash trivy-image-scan.sh"
+            }
+        }
     }
-   
+
     stage ('Update Kubernetes Deployment File'){
       steps{
         script{
@@ -58,6 +55,12 @@ pipeline {
           """
         }
       }
+    }
+
+    stage('Scan Deployment File'){
+        steps{
+            sh "trivy k8s --report summary deployment.yaml"
+        }
     }
 
     stage('Push Changed Deployment File to Git'){
