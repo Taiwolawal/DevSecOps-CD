@@ -27,14 +27,7 @@ pipeline {
       }
     }
     
-    stage('K8s Authenitcation: Kubeconfig'){
-      steps{
-          withKubeConfig([credentialsId: 'kubeconfig']) {
-            sh 'kubectl version --short'
-          }
-      }
-    }
-
+    
     stage('Vulnerability Scan - Kubernetes'){
         steps{
             withKubeConfig([credentialsId: 'kubeconfig']){
