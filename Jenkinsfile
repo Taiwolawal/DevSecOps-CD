@@ -60,7 +60,7 @@ pipeline {
     stage('Scan Deployment File'){
         steps{
             withKubeConfig([credentialsId: 'kubeconfig']){
-                sh "trivy file deployment.yaml"
+                sh "trivy config deployment.yaml"
             }
             
         }
