@@ -45,7 +45,7 @@ pipeline {
         }
     }
 
-    stage ('Update Kubernetes Deployment File'){
+    stage ('Update Deployment File'){
       steps{
         script{
           sh """
@@ -59,7 +59,10 @@ pipeline {
 
     stage('Scan Deployment File'){
         steps{
-            sh "trivy k8s --report summary deployment.yaml"
+            withKubeConfig([credentialsId: 'kubeconfig']){
+                sh "trivy k8s --report summary deployment.yaml"
+            }
+            
         }
     }
 
